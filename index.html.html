@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workspace Hub</title>
+    
+    <!-- Dynamic SVG Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%232563eb'/><stop offset='50%' stop-color='%23ef4444'/><stop offset='100%' stop-color='%23eab308'/></linearGradient></defs><rect width='100' height='100' rx='28' fill='url(%23g)'/><rect x='10' y='10' width='80' height='80' rx='20' fill='%230f172a'/><path d='M30 30h18v14H30zm22 0h18v14H52zm-22 18h18v22H30zm22 0h18v22H52z' fill='%233b82f6'/></svg>">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .fade-in {
+            animation: fadeIn 0.25s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .tile-dragging {
+            opacity: 0.35;
+            transform: scale(0.95);
+            border: 2px dashed #3b82f6 !important;
+        }
+        /* Custom Scrollbar for Smooth Aesthetics */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-300 antialiased selection:bg-blue-500 selection:text-white flex flex-col justify-between">
+
+    <div>
+        <!-- Main Navigation Bar -->
+        <header class="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80 backdrop-blur sticky top-0 z-40 px-4 sm:px-8 py-3.5 transition-colors duration-300">
+            <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+                
+                <!-- Branding & Live Digital Clock -->
+                <div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-gradient-to-tr from-blue-600 via-red-500 to-yellow-400 rounded-xl flex items-center justify-center p-0.5 shadow-md shadow-blue-500/10">
+                            <div class="w-full h-full bg-white dark:bg-slate-900 rounded-[10px] flex items-center justify-center font-bold text-transparent bg-clip-text bg-gradient-to-tr from-blue-600 to-violet-500 text-lg">
+                                G
+                            </div>
+                        </div>
+                        <div>
+                            <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent leading-none mb-1">Workspace Hub</h1>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-none">Custom Dashboard</p>
+                        </div>
+                    </div>
+
+                    <div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 hidden sm:block"></div>
+
+                    <!-- Live Clock Badge -->
+                    <div class="flex flex-col text-right sm:text-left">
+                        <span id="live-clock" class="text-sm font-semibold tracking-tight text-slate-700 dark:text-slate-200 leading-none mb-0.5">--:-- --</span>
+                        <span id="live-date" class="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-none">--- --- --</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+                    <!-- Quick Notes Toggle -->
+                    <button onclick="toggleNotesDrawer()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-colors" title="Quick Notes Scratchpad">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-amber-500">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                        </svg>
+                        <span class="hidden md:inline">Notes</span>
+                    </button>
+
+                    <!-- Add App Shortcut -->
+                    <button onclick="openAddAppModal()" class="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shadow-md shadow-blue-500/10 group">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 transition-transform group-hover:rotate-90">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        <span>Add Shortcut</span>
+                    </button>
+
+                    <!-- Theme Toggle -->
+                    <button onclick="toggleTheme()" class="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors" title="Toggle Appearance Theme">
+                        <svg id="theme-sun" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 hidden">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m0 13.5V21M4.5 12H6.75m13.5 0H21M19.813 19.813l-1.591-1.591M6.777 6.777l-1.591-1.591m12.039 0l-1.591 1.591M6.777 17.223l-1.591 1.591m12.333-5.454a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z" />
+                        </svg>
+                        <svg id="theme-moon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
+                        </svg>
+                    </button>
+
+                    <!-- Export / Backup Layout -->
+                    <button onclick="exportConfig()" class="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors" title="Backup / Export Layout JSON">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                        </svg>
+                    </button>
+
+                    <!-- Reset Layout -->
+                    <button onclick="resetToDefaults()" class="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-red-50 dark:hover:bg-red-950/30 text-slate-400 hover:text-red-500 transition-colors" title="Reset Workspace Layout">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-8 py-8">
+            
+            <!-- Smart Hub Multi-Engine Search Bar -->
+            <div class="max-w-2xl mx-auto mb-10 text-center">
+                <h2 id="greeting-text" class="text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-100 mb-4">Good day! Welcome back.</h2>
+                
+                <form onsubmit="handleSearch(event)" class="relative group flex items-center">
+                    <!-- Engine Selection Menu -->
+                    <div class="absolute left-2 z-10">
+                        <select id="search-engine" onchange="updateSearchPlaceholder()" class="bg-slate-100 dark:bg-slate-800 border-none text-xs font-semibold text-slate-600 dark:text-slate-300 rounded-xl px-2 py-1.5 outline-none cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                            <option value="google">Google</option>
+                            <option value="duckduckgo">DuckDuckGo</option>
+                            <option value="bing">Bing</option>
+                            <option value="youtube">YouTube</option>
+                            <option value="github">GitHub</option>
+                        </select>
+                    </div>
+
+                    <input type="text" id="search-input" placeholder="Search Google or type a URL..." class="w-full pl-32 pr-24 py-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm">
+                    
+                    <button type="submit" class="absolute right-2 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 font-semibold text-xs tracking-wider text-slate-600 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50 transition-colors uppercase">
+                        Search
+                    </button>
+                </form>
+                <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-2">Press <kbd class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[10px]">/</kbd> to focus search bar anytime</p>
+            </div>
+
+            <!-- Custom App Shortcuts Grid -->
+            <div id="apps-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-5">
+                <!-- App Tiles dynamically injected here -->
+            </div>
+
+            <!-- Empty Workspace View Banner -->
+            <div id="empty-state" class="hidden text-center py-16 px-4 max-w-md mx-auto border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl bg-white dark:bg-slate-900/50 fade-in">
+                <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center mx-auto mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 8.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+                    </svg>
+                </div>
+                <h3 class="text-base font-bold text-slate-800 dark:text-white mb-1">Workspace Hub is Empty</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-5">Repopulate your grid with pre-built tools or create custom site shortcuts.</p>
+                <button onclick="openAddAppModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-4 py-2.5 rounded-xl transition-colors shadow-md shadow-blue-500/10">
+                    Browse & Add Shortcuts
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Quick Notes Drawer / Slide-Over -->
+    <div id="notes-drawer" class="fixed inset-y-0 right-0 w-80 sm:w-96 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 z-50 shadow-2xl transform translate-x-full transition-transform duration-300 p-5 flex flex-col justify-between">
+        <div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
+                <div class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-amber-500">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                    </svg>
+                    <h3 class="font-bold text-slate-900 dark:text-white text-base">Quick Scratchpad</h3>
+                </div>
+                <button onclick="toggleNotesDrawer()" class="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <textarea id="scratchpad-text" oninput="saveNotes()" placeholder="Type quick notes, ideas, or to-dos here... (Auto-saved)" class="w-full h-80 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none font-mono"></textarea>
+        </div>
+        <div class="text-[11px] text-slate-400 dark:text-slate-500 text-center">
+            Saved automatically in your browser session.
+        </div>
+    </div>
+
+    <!-- Modal to Add Standard or Custom Shortcuts -->
+    <div id="add-app-modal" class="fixed inset-0 z-50 overflow-y-auto hidden opacity-0 transition-opacity duration-300 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-xl w-full p-6 shadow-2xl transform scale-95 transition-transform duration-300 max-h-[90vh] flex flex-col justify-between" id="modal-container">
+            <div>
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white">Add Shortcuts</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Enable Google apps or add custom web links.</p>
+                    </div>
+                    <button onclick="closeAddAppModal()" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Custom Shortcut Creation Form -->
+                <div class="mb-5 p-3.5 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                    <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2.5">Custom Link Creator</h4>
+                    <form onsubmit="addCustomShortcut(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <input type="text" id="custom-name" placeholder="Name (e.g. GitHub)" required class="px-3 py-1.5 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-800 dark:text-slate-100">
+                        <input type="url" id="custom-url" placeholder="https://example.com" required class="px-3 py-1.5 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-800 dark:text-slate-100">
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs py-1.5 px-3 rounded-xl transition-colors">
+                            + Add Custom Link
+                        </button>
+                    </form>
+                </div>
+
+                <h4 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Available Google Apps</h4>
+                <!-- List Grid of inactive default apps -->
+                <div id="modal-apps-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[220px] overflow-y-auto pr-1">
+                    <!-- App items dynamically populated -->
+                </div>
+                
+                <div id="modal-empty-state" class="hidden text-center py-6 text-slate-400 dark:text-slate-500 text-xs">
+                    🎉 All preset Google Workspace shortcuts are currently pinned!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-6 border-t border-slate-200 dark:border-slate-800/60 text-center text-xs text-slate-400 dark:text-slate-600">
+        <p>Workspace Hub &bull; Local Storage Driven &bull; Fast & Privacy First</p>
+    </footer>
+
+    <!-- Core Interactive Application Logic -->
+    <script>
+        // Central Repository of Google App Objects (21 core tools)
+        const GOOGLE_APPS = [
+            { id: 'docs', name: 'Google Docs', url: 'https://docs.google.com', baseColor: 'bg-blue-600', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />` },
+            { id: 'sheets', name: 'Google Sheets', url: 'https://sheets.google.com', baseColor: 'bg-emerald-600', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5M10.5 5.25v13.5m4.5-13.5v13.5" />` },
+            { id: 'slides', name: 'Google Slides', url: 'https://slides.google.com', baseColor: 'bg-amber-500', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0V18m0 3h7.5m0-3v3m0-3h1.5m-9 0h-1.5m8.25-12h-6.75M12 9.75l1.5 1.5M12 9.75l-1.5 1.5M12 9.75V4.5" />` },
+            { id: 'calendar', name: 'Google Calendar', url: 'https://calendar.google.com', baseColor: 'bg-blue-500', icon: `CUSTOM_CALENDAR` },
+            { id: 'keep', name: 'Google Keep', url: 'https://keep.google.com', baseColor: 'bg-yellow-500', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.467 5.99 5.99 0 0 0-1.925-3.546 5.974 5.974 0 0 0-3.233-1.451m1.58 10.58a3.75 3.75 0 0 0 4.95 0M12 18c-1.657 0-3-1.343-3-3a3 3 0 0 1 3-3M12 18V9.75" />` },
+            { id: 'forms', name: 'Google Forms', url: 'https://forms.google.com', baseColor: 'bg-purple-600', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.03 0 1.9.732 2.076 1.704m-5.8 0a48.224 48.224 0 0 0-4.544.282A2.036 2.036 0 0 0 5 6.274V18.75A2.25 2.25 0 0 0 7.25 21h7.437c.155 0 .311-.006.466-.017m0 0a2.25 2.25 0 0 0 1.802-2.27V6.108c0-.114-.005-.228-.014-.34" />` },
+            { id: 'tasks', name: 'Google Tasks', url: 'https://mail.google.com/tasks/canvas', baseColor: 'bg-sky-600', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />` },
+            { id: 'drive', name: 'Google Drive', url: 'https://drive.google.com', baseColor: 'bg-indigo-600', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A11.952 11.952 0 0 1 12 16.5c-2.998 0-5.74-1.1-7.843-2.918m0 0A8.959 8.959 0 0 1 3 12c0-.778.1-1.533.284-2.253" />` },
+            { id: 'meet', name: 'Google Meet', url: 'https://meet.google.com', baseColor: 'bg-teal-600', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />` },
+            { id: 'gmail', name: 'Gmail', url: 'https://mail.google.com', baseColor: 'bg-red-600', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />` },
+            { id: 'chat', name: 'Google Chat', url: 'https://chat.google.com', baseColor: 'bg-emerald-500', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.083.205.13.431.13.669v.313c0 2.004-1.624 3.628-3.628 3.628h-3.238c-.311 0-.616.09-.877.261l-2.88 1.886c-.322.21-.74-.022-.74-.406V13.14c0-.311-.252-.563-.563-.563H4.83a3.628 3.628 0 0 1-3.628-3.628V5.313A3.628 3.628 0 0 1 4.83 1.685h11.815a3.628 3.628 0 0 1 3.606 3.506Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M22.5 12.313v3.313a3.313 3.313 0 0 1-3.313 3.313h-4.32a.563.563 0 0 0-.352.124l-2.025 1.554c-.237.182-.572.012-.572-.29v-1.388c0-.311-.252-.563-.563-.563H7.5A3.312 3.312 0 0 1 4.542 15.5" />` },
+            { id: 'contacts', name: 'Contacts', url: 'https://contacts.google.com', baseColor: 'bg-blue-600', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z" />` },
+            { id: 'photos', name: 'Google Photos', url: 'https://photos.google.com', baseColor: 'bg-pink-500', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 1 9 4.5h.035a8.25 8.25 0 0 1 6.327 2.714ZM12 12v3.75M12 12H8.25M12 12V8.25M12 12h3.75" />` },
+            { id: 'maps', name: 'Google Maps', url: 'https://maps.google.com', baseColor: 'bg-red-500', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1 1 15 0Z" />` },
+            { id: 'translate', name: 'Translate', url: 'https://translate.google.com', baseColor: 'bg-blue-600', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 0 1 6-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896 3.066 2.457 5.857 4.594 8.161M5.5 16.5c.343-.464.71-.912 1.1-1.34" />` },
+            { id: 'search', name: 'Google Search', url: 'https://www.google.com', baseColor: 'bg-slate-700', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.604 10.604Z" />` },
+            { id: 'analytics', name: 'Analytics', url: 'https://analytics.google.com', baseColor: 'bg-orange-500', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v5.625C7.5 19.371 6.996 19.875 6.375 19.875h-2.25A1.125 1.125 0 0 1 3 18.75v-5.625ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v10.125c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v14.625c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />` },
+            { id: 'trends', name: 'Google Trends', url: 'https://trends.google.com', baseColor: 'bg-blue-500', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />` },
+            { id: 'aistudio', name: 'AI Studio', url: 'https://aistudio.google.com', baseColor: 'bg-violet-600', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 21l-.813-5.096L3 15l5.096-.813L9 9l.813 5.187L15 15l-5.187.904zM18.75 5.25h-.008v.008H18.75V5.25zm0 6h-.008v.008H18.75v-.008zm-6-6h-.008v.008H12.75V5.25zm0 6h-.008v.008H12.75v-.008z" />` },
+            { id: 'notebooklm', name: 'Notebook LM', url: 'https://notebooklm.google.com', baseColor: 'bg-teal-700', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />` },
+            { id: 'voice', name: 'Google Voice', url: 'https://voice.google.com', baseColor: 'bg-green-600', icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-1.514 2.02a13.717 13.717 0 0 1-6.015-6.015l2.02-1.514c.361-.272.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />` }
+        ];
+
+        // Global State
+        let activeAppIds = [];
+        let customApps = [];
+        let draggedItemId = null;
+
+        // Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            initClockAndGreeting();
+            loadState();
+            loadNotes();
+            renderGrid();
+            
+            // Register Keyboard Shortcuts
+            window.addEventListener('keydown', (e) => {
+                if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    document.getElementById('search-input').focus();
+                } else if (e.key === 'Escape') {
+                    closeAddAppModal();
+                    document.getElementById('notes-drawer').classList.add('translate-x-full');
+                }
+            });
+        });
+
+        // Live Clock & Time Greeting
+        function initClockAndGreeting() {
+            function updateClock() {
+                const now = new Date();
+                const clockEl = document.getElementById('live-clock');
+                const dateEl = document.getElementById('live-date');
+                const greetEl = document.getElementById('greeting-text');
+
+                clockEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                dateEl.textContent = now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+
+                const hr = now.getHours();
+                if (hr < 12) greetEl.textContent = "Good morning! Ready for a productive day?";
+                else if (hr < 17) greetEl.textContent = "Good afternoon! Welcome back to your workspace.";
+                else greetEl.textContent = "Good evening! Wrapping up the day's projects?";
+            }
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        // Search Engine & Redirect
+        function updateSearchPlaceholder() {
+            const engine = document.getElementById('search-engine').value;
+            const input = document.getElementById('search-input');
+            const capitalized = engine.charAt(0).toUpperCase() + engine.slice(1);
+            input.placeholder = `Search ${capitalized} or type a URL...`;
+        }
+
+        function handleSearch(e) {
+            e.preventDefault();
+            const input = document.getElementById('search-input').value.trim();
+            if (!input) return;
+
+            if (input.match(/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/)) {
+                const destination = input.startsWith('http') ? input : `https://${input}`;
+                window.open(destination, '_blank');
+            } else {
+                const engine = document.getElementById('search-engine').value;
+                let searchUrl = `https://www.google.com/search?q=${encodeURIComponent(input)}`;
+                if (engine === 'duckduckgo') searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(input)}`;
+                if (engine === 'bing') searchUrl = `https://www.bing.com/search?q=${encodeURIComponent(input)}`;
+                if (engine === 'youtube') searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(input)}`;
+                if (engine === 'github') searchUrl = `https://github.com/search?q=${encodeURIComponent(input)}`;
+                
+                window.open(searchUrl, '_blank');
+            }
+            document.getElementById('search-input').value = '';
+        }
+
+        // Persistent State Handling
+        function loadState() {
+            const savedState = localStorage.getItem('workspace_hub_layout');
+            const savedCustom = localStorage.getItem('workspace_hub_custom');
+
+            if (savedCustom) {
+                try { customApps = JSON.parse(savedCustom); } catch(e) { customApps = []; }
+            }
+
+            if (savedState) {
+                try { activeAppIds = JSON.parse(savedState); } catch(e) { activeAppIds = getDefaultAppIds(); }
+            } else {
+                activeAppIds = getDefaultAppIds();
+            }
+        }
+
+        function getDefaultAppIds() {
+            return GOOGLE_APPS.map(app => app.id);
+        }
+
+        function saveState() {
+            localStorage.setItem('workspace_hub_layout', JSON.stringify(activeAppIds));
+            localStorage.setItem('workspace_hub_custom', JSON.stringify(customApps));
+        }
+
+        function resetToDefaults() {
+            if (confirm("Reset layout to default Google Workspace shortcuts? Custom links will be kept.")) {
+                activeAppIds = getDefaultAppIds().concat(customApps.map(a => a.id));
+                saveState();
+                renderGrid();
+            }
+        }
+
+        // Custom Link Management
+        function addCustomShortcut(e) {
+            e.preventDefault();
+            const name = document.getElementById('custom-name').value.trim();
+            const url = document.getElementById('custom-url').value.trim();
+            if (!name || !url) return;
+
+            const id = 'custom-' + Date.now();
+            const colors = ['bg-indigo-600', 'bg-rose-600', 'bg-cyan-600', 'bg-violet-600', 'bg-amber-600'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            const letter = name.charAt(0).toUpperCase();
+
+            const newApp = {
+                id,
+                name,
+                url,
+                baseColor: randomColor,
+                isCustom: true,
+                icon: `<text x="12" y="16" font-size="12" font-family="'Inter', sans-serif" font-weight="bold" fill="white" text-anchor="middle">${letter}</text>`
+            };
+
+            customApps.push(newApp);
+            activeAppIds.push(id);
+            saveState();
+            renderGrid();
+
+            document.getElementById('custom-name').value = '';
+            document.getElementById('custom-url').value = '';
+            closeAddAppModal();
+        }
+
+        // Theme Toggle
+        function initTheme() {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('theme-sun').classList.remove('hidden');
+                document.getElementById('theme-moon').classList.add('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('theme-sun').classList.add('hidden');
+                document.getElementById('theme-moon').classList.remove('hidden');
+            }
+        }
+
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.theme = 'light';
+                document.getElementById('theme-sun').classList.add('hidden');
+                document.getElementById('theme-moon').classList.remove('hidden');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.theme = 'dark';
+                document.getElementById('theme-sun').classList.remove('hidden');
+                document.getElementById('theme-moon').classList.add('hidden');
+            }
+        }
+
+        // Notes Scratchpad
+        function toggleNotesDrawer() {
+            const drawer = document.getElementById('notes-drawer');
+            drawer.classList.toggle('translate-x-full');
+        }
+
+        function saveNotes() {
+            const text = document.getElementById('scratchpad-text').value;
+            localStorage.setItem('workspace_hub_notes', text);
+        }
+
+        function loadNotes() {
+            const saved = localStorage.getItem('workspace_hub_notes');
+            if (saved) document.getElementById('scratchpad-text').value = saved;
+        }
+
+        // Drag & Drop Handlers
+        function onDragStart(e, id) {
+            draggedItemId = id;
+            const element = document.getElementById(`tile-${id}`);
+            if (element) setTimeout(() => element.classList.add('tile-dragging'), 0);
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function onDragEnd(e, id) {
+            const element = document.getElementById(`tile-${id}`);
+            if (element) element.classList.remove('tile-dragging');
+            draggedItemId = null;
+            renderGrid();
+        }
+
+        function onDragOver(e, id) {
+            e.preventDefault();
+            if (draggedItemId === id) return;
+            const hoverElement = document.getElementById(`tile-${id}`);
+            if (hoverElement) hoverElement.classList.add('border-blue-500', 'scale-[1.02]');
+        }
+
+        function onDragLeave(e, id) {
+            const hoverElement = document.getElementById(`tile-${id}`);
+            if (hoverElement) hoverElement.classList.remove('border-blue-500', 'scale-[1.02]');
+        }
+
+        function onDrop(e, targetId) {
+            e.preventDefault();
+            if (draggedItemId === targetId) return;
+
+            const currentIndex = activeAppIds.indexOf(draggedItemId);
+            const targetIndex = activeAppIds.indexOf(targetId);
+
+            if (currentIndex > -1 && targetIndex > -1) {
+                activeAppIds.splice(currentIndex, 1);
+                activeAppIds.splice(targetIndex, 0, draggedItemId);
+                saveState();
+            }
+        }
+
+        function closeTile(e, id) {
+            e.stopPropagation();
+            e.preventDefault();
+            activeAppIds = activeAppIds.filter(appId => appId !== id);
+            saveState();
+            renderGrid();
+        }
+
+        // Grid Rendering
+        function renderGrid() {
+            const gridContainer = document.getElementById('apps-grid');
+            const emptyContainer = document.getElementById('empty-state');
+            gridContainer.innerHTML = '';
+
+            if (activeAppIds.length === 0) {
+                gridContainer.classList.add('hidden');
+                emptyContainer.classList.remove('hidden');
+                return;
+            }
+
+            gridContainer.classList.remove('hidden');
+            emptyContainer.classList.add('hidden');
+
+            const currentDay = new Date().getDate();
+            const allApps = [...GOOGLE_APPS, ...customApps];
+
+            activeAppIds.forEach(id => {
+                const app = allApps.find(a => a.id === id);
+                if (!app) return;
+
+                let iconContent = app.icon;
+                if (app.id === 'calendar') {
+                    iconContent = `<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.625 21h12.75A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.625 9h12.75A2.25 2.25 0 0 1 21 11.25v7.5" /><text x="12" y="17" font-size="7.5" font-family="'Inter', sans-serif" font-weight="bold" fill="white" text-anchor="middle">${currentDay}</text>`;
+                }
+
+                const tileHtml = `
+                    <div id="tile-${app.id}" 
+                         draggable="true"
+                         ondragstart="onDragStart(event, '${app.id}')"
+                         ondragend="onDragEnd(event, '${app.id}')"
+                         ondragover="onDragOver(event, '${app.id}')"
+                         ondragleave="onDragLeave(event, '${app.id}')"
+                         ondrop="onDrop(event, '${app.id}')"
+                         onclick="window.open('${app.url}', '_blank')"
+                         class="group relative flex flex-col items-center justify-center p-4 sm:p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl cursor-pointer shadow-sm hover:shadow-md hover:scale-[1.03] transition-all duration-200 fade-in select-none">
+                        
+                        <button onclick="closeTile(event, '${app.id}')" 
+                                class="absolute top-2 right-2 p-1 rounded-lg bg-slate-100 hover:bg-red-100 dark:bg-slate-800 dark:hover:bg-red-950/50 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10" 
+                                title="Hide Shortcut">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+
+                        <div class="w-11 h-11 ${app.baseColor} rounded-xl flex items-center justify-center text-white mb-2.5 shadow-md shadow-slate-200 dark:shadow-none group-hover:scale-105 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" class="w-6 h-6">
+                                ${iconContent}
+                            </svg>
+                        </div>
+
+                        <span class="text-xs font-semibold text-slate-700 dark:text-slate-200 text-center tracking-tight truncate w-full">${app.name}</span>
+                    </div>
+                `;
+                gridContainer.insertAdjacentHTML('beforeend', tileHtml);
+            });
+        }
+
+        // Modal Management
+        function openAddAppModal() {
+            const modal = document.getElementById('add-app-modal');
+            const listContainer = document.getElementById('modal-apps-list');
+            const emptyState = document.getElementById('modal-empty-state');
+            
+            listContainer.innerHTML = '';
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                document.getElementById('modal-container').classList.remove('scale-95');
+            }, 10);
+
+            const inactiveApps = GOOGLE_APPS.filter(app => !activeAppIds.includes(app.id));
+
+            if (inactiveApps.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                inactiveApps.forEach(app => {
+                    const itemHtml = `
+                        <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-7 h-7 ${app.baseColor} rounded-lg flex items-center justify-center text-white text-xs">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                                        ${app.icon}
+                                    </svg>
+                                </div>
+                                <span class="text-xs font-medium text-slate-700 dark:text-slate-300">${app.name}</span>
+                            </div>
+                            <button onclick="addAppBack('${app.id}')" class="px-2.5 py-1 text-[11px] font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                                Pin
+                            </button>
+                        </div>
+                    `;
+                    listContainer.insertAdjacentHTML('beforeend', itemHtml);
+                });
+            }
+        }
+
+        function addAppBack(id) {
+            if (!activeAppIds.includes(id)) {
+                activeAppIds.push(id);
+                saveState();
+                renderGrid();
+                openAddAppModal(); // Refresh modal list
+            }
+        }
+
+        function closeAddAppModal() {
+            const modal = document.getElementById('add-app-modal');
+            modal.classList.add('opacity-0');
+            document.getElementById('modal-container').classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        // Configuration Export JSON Backup
+        function exportConfig() {
+            const config = {
+                activeAppIds,
+                customApps,
+                notes: localStorage.getItem('workspace_hub_notes') || ''
+            };
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'workspace-hub-backup.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
